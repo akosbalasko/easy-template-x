@@ -14,4 +14,5 @@ export interface ImageContent extends PluginContent {
     format: ImageFormat;
     width: number;
     height: number;
+    wrapType?: string;
 }

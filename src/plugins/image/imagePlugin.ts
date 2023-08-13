@@ -38,13 +38,13 @@ export class ImagePlugin extends TemplatePlugin {
 
         // create the xml markup
         const imageId = nextImageId++;
-        const imageXml = this.createMarkup(imageId, relId, content.altText, content.width, content.height);
+        const imageXml = this.createMarkup(imageId, relId, content.altText, content.width, content.height, content.wrapType);
 
         XmlNode.insertAfter(imageXml, wordTextNode);
         XmlNode.remove(wordTextNode);
     }
 
-    private createMarkup(imageId: number, relId: string, altText: string, width: number, height: number): XmlNode {
+    private createMarkup(imageId: number, relId: string, altText: string, width: number, height: number, wrapType: string): XmlNode {
 
         // http://officeopenxml.com/drwPicInline.php
 
@@ -77,7 +77,38 @@ export class ImagePlugin extends TemplatePlugin {
             </w:drawing>
         `;
 
-        const markupXml = this.utilities.xmlParser.parse(markupText) as XmlGeneralNode;
+        const wrapSquaredMarkupText = `
+        <w:drawing>
+        <wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="251658240" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="44E9F190">
+          <wp:simplePos x="0" y="0"/>
+          <wp:positionH relativeFrom="column">
+            <wp:posOffset>0</wp:posOffset>
+          </wp:positionH>
+          <wp:positionV relativeFrom="paragraph">
+            <wp:posOffset>0</wp:posOffset>
+          </wp:positionV>
+          <wp:extent cx="${this.pixelsToEmu(width)}" cy="${this.pixelsToEmu(height)}"/>
+          <wp:effectExtent l="0" t="0" r="0" b="0"/>
+          <wp:wrapSquare wrapText="bothSides"/>
+          ${this.docProperties(imageId, name, altText)}
+          <wp:cNvGraphicFramePr>
+            <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+          </wp:cNvGraphicFramePr>
+          <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+            ${this.pictureMarkup(imageId, relId, name, width, height)}
+            </a:graphicData>
+          </a:graphic>
+          <wp14:sizeRelH relativeFrom="page">
+            <wp14:pctWidth>0</wp14:pctWidth>
+          </wp14:sizeRelH>
+          <wp14:sizeRelV relativeFrom="page">
+            <wp14:pctHeight>0</wp14:pctHeight>
+          </wp14:sizeRelV>
+        </wp:anchor>
+      </w:drawing>`;
+
+        const markupXml = this.utilities.xmlParser.parse(wrapType === "WrapSquare" ? wrapSquaredMarkupText : markupText) as XmlGeneralNode;
         XmlNode.removeEmptyTextNodes(markupXml); // remove whitespace
 
         return markupXml;
